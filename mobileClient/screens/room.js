@@ -58,13 +58,6 @@ export default function Room({ navigation }) {
     }
   }, [users, name]);
 
-  const sendMoney = event => {
-    console.log(event);
-    // socket.emit("sendMoney", room, 10, event.target.value, myIndex, () => {
-    //   console.log("sent $10");
-    // });
-  };
-
   return (
     <View>
       <Card>
@@ -75,20 +68,29 @@ export default function Room({ navigation }) {
         </View>
       </Card>
 
-      {users.map((user, index) => (
-        <ListItem
-          divider
-          centerElement={{
-            primaryText: `${user.name}`,
-            secondaryText: `${user.cash}`
-          }}
-          rightElement={{
-            primaryText: "Hello"
-          }}
-          value={index}
-          onPress={event => sendMoney}
-        />
-      ))}
+      {users.map(
+        (user, index) =>
+          user.name != name && (
+            <ListItem
+              divider
+              centerElement={{
+                primaryText: `${user.name}`,
+                secondaryText: `$${user.cash}`
+              }}
+              onPress={() => {
+                navigation.navigate("Pay", {
+                  user,
+                  index,
+                  myIndex,
+                  socket,
+                  room,
+                  cash
+                });
+                //sendMoney(index);
+              }}
+            />
+          )
+      )}
     </View>
   );
 }

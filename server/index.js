@@ -43,6 +43,8 @@ io.on("connection", async socket => {
       var user = null;
       let currentRoom;
 
+      name = name.trim();
+
       console.log("Room name", room);
 
       socket.join(room);
@@ -131,34 +133,44 @@ io.on("connection", async socket => {
     "sendMoney",
     (room, amount, recieverIndex, giverIndex, callback) => {
       console.log("Send money request");
+      var amountInt = parseInt(amount);
 
-      //Want to find a way to remove this nesting
-      Room.findOne({ name: room }).then(roomObject => {
-        if (roomObject != null) {
-          User.updateOne(
-            { name: roomObject.users[recieverIndex].name },
-            { cash: (roomObject.users[recieverIndex].cash += amount) }
-          ).then(userUpdated => {
+      //Just in case someone tries to take money from opponent
+      if (amountInt > 0) {
+        console.log("Positive");
+        //Want to find a way to remove this nesting
+        Room.findOne({ name: room }).then(roomObject => {
+          if (roomObject != null) {
             User.updateOne(
-              { name: roomObject.users[giverIndex].name },
-              { cash: (roomObject.users[giverIndex].cash -= amount) }
-            ).then(giver => {
-              Room.updateOne({ name: room }, { users: roomObject.users }).then(
-                updatedRoom => {
+              { name: roomObject.users[recieverIndex].name },
+              { cash: (roomObject.users[recieverIndex].cash += amountInt) }
+            ).then(userUpdated => {
+              User.updateOne(
+                { name: roomObject.users[giverIndex].name },
+                { cash: (roomObject.users[giverIndex].cash -= amountInt) }
+              ).then(giver => {
+                Room.updateOne(
+                  { name: room },
+                  { users: roomObject.users }
+                ).then(updatedRoom => {
                   io.in(room).emit("users", roomObject.users);
                   console.log("Sent users to room");
                   io.to(room).emit("message", {
                     user: "Admin",
                     text: `${roomObject.users[recieverIndex].name} sent $${amount} to ${roomObject.users[giverIndex].name}`
                   });
-                }
-              );
+                  callback();
+                });
+              });
             });
-          });
-        } else {
-          console.log("Room does not exist");
-        }
-      });
+          } else {
+            console.log("Room does not exist");
+          }
+        });
+      } else {
+        console.log("Negative amount");
+        callback("Negative");
+      }
 
       // console.log(getUsersInRoom(sendingUser.room));
 
