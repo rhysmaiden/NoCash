@@ -6,7 +6,8 @@ const UserSchema = new Schema({
     type: String
   },
   cash: Number,
-  socket_id: String
+  socket_id: String,
+  type: String
 });
 
 const MessageSchema = new Schema({
@@ -17,7 +18,8 @@ const MessageSchema = new Schema({
 const RoomSchema = new Schema({
   name: String,
   users: [UserSchema],
-  messages: [MessageSchema]
+  messages: [MessageSchema],
+  playerAmount: Number
 });
 
 const Room = mongoose.model("room", RoomSchema);
