@@ -14,7 +14,7 @@ export default function Home({ navigation }) {
       <Button
         title="Create"
         onPress={() => {
-          navigation.navigate("GameSetup");
+          navigation.navigate("CreateRoom");
         }}
       />
     </View>

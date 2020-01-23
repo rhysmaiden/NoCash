@@ -26,7 +26,6 @@ export default function Pay({ navigation }) {
   }, []);
 
   const sendMoney = () => {
-    console.log("SEND");
     const socket = navigation.getParam("socket");
     const room = navigation.getParam("room");
 
@@ -36,6 +35,19 @@ export default function Pay({ navigation }) {
       setError("Sneaky sneaky");
     } else {
       socket.emit("sendMoney", room, amount, index, myIndex, () => {
+        navigation.pop();
+      });
+    }
+  };
+
+  const requestMoney = () => {
+    const socket = navigation.getParam("socket");
+    const room = navigation.getParam("room");
+
+    if (amount < 0) {
+      setError("You can't request negative money");
+    } else {
+      socket.emit("requestMoney", room, amount, index, myIndex, () => {
         navigation.pop();
       });
     }
@@ -59,6 +71,13 @@ export default function Pay({ navigation }) {
         primary
         text="Send money"
         onPress={sendMoney}
+      />
+      <Button
+        style={{ margin: 30 }}
+        raised
+        primary
+        text="Request money"
+        onPress={requestMoney}
       />
       <Text>{error}</Text>
     </View>

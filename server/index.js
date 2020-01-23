@@ -6,6 +6,8 @@ const { Room, Message, User } = require("./models/models.js");
 const ip = require("ip");
 console.log(ip.address());
 
+//TODO: Reconnect when lost connection
+
 const { addUser, removeUser, getUser, getUsersInRoom } = require("./users.js");
 
 const PORT = process.env.PORT || 5000;
@@ -52,12 +54,7 @@ io.on("connection", async socket => {
       //Get or Create Room
       await Room.findOne({ name: room }).then(roomRecord => {
         if (!roomRecord) {
-          currentRoom = new Room({
-            name: room
-          });
-          currentRoom.save().then(p => {
-            console.log("Return after save", p);
-          });
+          callback("Room doesn't exist");
         } else {
           currentRoom = roomRecord;
         }
@@ -68,8 +65,9 @@ io.on("connection", async socket => {
         if (record === null) {
           var newUser = new User({
             name: name,
-            cash: 100,
-            socket_id: socket.id
+            cash: currentRoom.playerAmount,
+            socket_id: socket.id,
+            type: "human"
           });
 
           newUser.save();
@@ -97,6 +95,59 @@ io.on("connection", async socket => {
       });
     }
   );
+
+  socket.on(
+    "createRoom",
+    async ({ room: roomName, playerAmount, computerPlayers }, callback) => {
+      console.log(roomName, playerAmount, computerPlayers);
+
+      Room.find({ name: roomName })
+        .count()
+        .then(async count => {
+          if (count > 0) {
+            console.log("Already exists");
+            callback("Room already exists");
+          } else {
+            var bots = [];
+            roomObject = new Room({
+              name: roomName,
+              playerAmount: playerAmount
+            });
+
+            await computerPlayers.map(computerPlayer => {
+              var botObject = new User({
+                name: computerPlayer.name,
+                cash: computerPlayer.amount,
+                type: "bot"
+              });
+              botObject.save().then(bot => {
+                roomObject.users.push(bot);
+
+                //The roomObject was being saved before the users had to been added due to it being asynchronous
+                if (roomObject.users.length === computerPlayers.length) {
+                  roomObject.save().then(p => {
+                    console.log("New room created: ", roomName);
+                    callback("Room created");
+                  });
+                }
+              });
+            });
+          }
+        });
+    }
+  );
+
+  socket.on("roomExists", async ({ room: roomName }, callback) => {
+    Room.find({ name: roomName })
+      .count()
+      .then(count => {
+        if (count > 0) {
+          callback(true);
+        } else {
+          callback(false);
+        }
+      });
+  });
 
   //TODO: CLEANUP OR DLEETE vvvvvvvvv
 
@@ -133,6 +184,7 @@ io.on("connection", async socket => {
     "sendMoney",
     (room, amount, recieverIndex, giverIndex, callback) => {
       console.log("Send money request");
+
       var amountInt = parseInt(amount);
 
       //Just in case someone tries to take money from opponent
@@ -142,17 +194,21 @@ io.on("connection", async socket => {
         Room.findOne({ name: room }).then(roomObject => {
           if (roomObject != null) {
             User.updateOne(
+              //Add money from reciever
               { name: roomObject.users[recieverIndex].name },
               { cash: (roomObject.users[recieverIndex].cash += amountInt) }
             ).then(userUpdated => {
               User.updateOne(
+                //Remove money from sender
                 { name: roomObject.users[giverIndex].name },
                 { cash: (roomObject.users[giverIndex].cash -= amountInt) }
               ).then(giver => {
+                //Update room with updates users
                 Room.updateOne(
                   { name: room },
                   { users: roomObject.users }
                 ).then(updatedRoom => {
+                  console.log(roomObject.users);
                   io.in(room).emit("users", roomObject.users);
                   console.log("Sent users to room");
                   io.to(room).emit("message", {
@@ -171,16 +227,78 @@ io.on("connection", async socket => {
         console.log("Negative amount");
         callback("Negative");
       }
+    }
+  );
 
-      // console.log(getUsersInRoom(sendingUser.room));
+  const requestBotMoney = (
+    roomObject,
+    room,
+    amountInt,
+    recieverIndex,
+    giverIndex,
+    callback
+  ) => {
+    console.log("Requesting bot money");
+    User.updateOne(
+      //Add money from reciever
+      { name: roomObject.users[recieverIndex].name },
+      { cash: (roomObject.users[recieverIndex].cash -= amountInt) }
+    ).then(userUpdated => {
+      User.updateOne(
+        //Remove money from sender
+        { name: roomObject.users[giverIndex].name },
+        { cash: (roomObject.users[giverIndex].cash += amountInt) }
+      ).then(giver => {
+        //Update room with updates users
+        Room.updateOne({ name: room }, { users: roomObject.users }).then(
+          updatedRoom => {
+            io.in(room).emit("users", roomObject.users);
+            console.log("Sent users to room");
+            io.to(room).emit("message", {
+              user: "Admin",
+              text: `${roomObject.users[recieverIndex].name} request $${amountInt} from ${roomObject.users[giverIndex].name}`
+            });
+            callback();
+          }
+        );
+      });
+    });
+  };
 
-      // TODO: Reimplement broadcast with mongo
+  socket.on(
+    "requestMoney",
+    (room, amount, recieverIndex, giverIndex, callback) => {
+      console.log("Request");
 
-      // socket.broadcast
-      //   .in(sendingUser.room)
-      //   .emit("users", { users: getUsersInRoom(sendingUser.room) });
+      var amountInt = parseInt(amount);
 
-      // console.log(sendingUser, reciever);
+      if (amountInt > 0) {
+        Room.findOne({ name: room }).then(roomObject => {
+          if (roomObject != null) {
+            User.findOne({ name: roomObject.users[recieverIndex].name }).then(
+              recievingUser => {
+                if (recievingUser.type == "bot") {
+                  requestBotMoney(
+                    roomObject,
+                    room,
+                    amountInt,
+                    recieverIndex,
+                    giverIndex,
+                    callback
+                  );
+                } else {
+                  io.to(`${recievingUser.socket_id}`).emit("moneyRequest", {
+                    requestingUser: giverIndex,
+                    amount: amountInt
+                  });
+                }
+              }
+            );
+          }
+        });
+      } else {
+        callback("Negative amount");
+      }
     }
   );
 });
