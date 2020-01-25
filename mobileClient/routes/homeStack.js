@@ -8,7 +8,8 @@ import JoinRoom from "../screens/joinRoom.js";
 
 const screens = {
   Home: {
-    screen: Home
+    screen: Home,
+    headerMode: "none"
   },
   JoinRoom: {
     screen: JoinRoom
@@ -24,6 +25,8 @@ const screens = {
   }
 };
 
-const HomeStack = createStackNavigator(screens);
+const HomeStack = createStackNavigator(screens, {
+  mode: "modal"
+});
 
 export default createAppContainer(HomeStack);

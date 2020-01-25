@@ -1,11 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Modal,
+  ActivityIndicator,
+  Button
+} from "react-native";
 import io from "socket.io-client";
+import UserPlate from "../components/userPlate.js";
+import RoomUsers from "../components/roomUsers.js";
+import Dialog, {
+  DialogContent,
+  DialogFooter,
+  DialogButton,
+  DialogTitle
+} from "react-native-popup-dialog";
 
 import {
   ListItem,
   Card,
-  Dialog,
   DialogDefaultActions,
   Snackbar
 } from "react-native-material-ui";
@@ -27,41 +42,35 @@ export default function Room({ navigation }) {
   const ENDPOINT = "http://192.168.1.101:5000/";
 
   useEffect(() => {
-    console.log("Is this running?");
     const nameString = navigation.getParam("name");
     const roomString = navigation.getParam("room");
     setName(nameString);
     setRoom(roomString);
-
-    console.log(ENDPOINT);
-
     socket = io(ENDPOINT);
 
-    console.log(nameString);
-    console.log(roomString);
     socket.emit("join", { nameString, roomString }, info => {
       console.log(info);
     });
 
-    console.log("we got to here");
     return () => {
-      socket.emit("disconnect");
+      socket.emit("close", callback => {
+        console.log("Disconnect");
+      });
+
+      console.log("DISCONESSISO");
+
       socket.off();
     };
   }, [ENDPOINT]);
 
   useEffect(() => {
     socket.on("users", newUsers => {
-      console.log("Recieved Users");
       setUsers(newUsers);
-      setSnackBarVisibile(true);
     });
   }, [users]);
 
   useEffect(() => {
     socket.on("moneyRequest", request => {
-      console.log("Rreuqest");
-      console.log(request);
       setRequest(request);
       setPopup(true);
     });
@@ -96,86 +105,76 @@ export default function Room({ navigation }) {
     );
   };
 
-  return (
-    <ScrollView style={{ flex: 1 }}>
-      <Card>
-        <View style={{ padding: 10 }}>
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-            {`${name} - $${cash}`}
-          </Text>
-        </View>
-      </Card>
+  const payUser = index => {
+    navigation.navigate("Pay", {
+      user: users[index],
+      name,
+      index,
+      myIndex,
+      socket,
+      room,
+      cash
+    });
+  };
 
-      {users.map(
-        (user, index) =>
-          user.name != name && (
-            <ListItem
-              divider
-              centerElement={{
-                primaryText: `${user.name}`,
-                secondaryText: `$${user.cash}`
-              }}
-              onPress={() => {
-                navigation.navigate("Pay", {
-                  user,
-                  index,
-                  myIndex,
-                  socket,
-                  room,
-                  cash
-                });
-                //sendMoney(index);
-              }}
-            />
-          )
-      )}
+  return (
+    <ScrollView>
+      <UserPlate name={name} cash={cash} room={room} version="large" />
+      <RoomUsers users={users} name={name} payUser={payUser} />
 
       {popup && (
-        <Dialog>
-          <Dialog.Title>
-            <Text>Money Request</Text>
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text>{`${users[request.requestingUser].name} is requesting $${
-              request.amount
-            } from you.`}</Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <DialogDefaultActions
-              actions={["decline", "accept"]}
-              onActionPress={optionClicked => {
-                if (optionClicked == "accept") {
+        <Dialog
+          footer={
+            <DialogFooter>
+              <DialogButton text="DECLINE" onPress={() => setPopup(false)} />
+              <DialogButton
+                text="ACCEPT"
+                onPress={() => {
+                  console.log(popup);
                   acceptRequest();
-                } else {
-                  declineRequest();
-                }
-                console.log(optionClicked);
-                setPopup(false);
-              }}
-            />
-          </Dialog.Actions>
+                  setPopup(false);
+                }}
+              />
+            </DialogFooter>
+          }
+          dialogTitle={<DialogTitle title="Money Request" />}
+          visible={popup}
+          onTouchOutside={() => {}}
+        >
+          <DialogContent
+            style={{
+              margin: 10
+            }}
+          >
+            {popup && (
+              <Text>
+                {`${users[request.requestingUser].name} is requesting $${
+                  request.amount
+                } from you.`}
+              </Text>
+            )}
+          </DialogContent>
         </Dialog>
       )}
-      <View style={{ bottom: 0, position: "absolute", width: "100%" }}>
-        <Snackbar
-          visible={snackBarVisible}
-          message={messages.length > 0 && messages.slice(-1)[0].text}
-          onRequestClose={() => setSnackBarVisibile(false)}
-          onPress={() => {
-            console.log("FIished");
-            setSnackBarVisibile(false);
+      {snackBarVisible && (
+        <View
+          style={{
+            bottom: 15,
+            position: "absolute",
+            width: "100%",
+            backgroundColor: "red"
           }}
-        />
-      </View>
+        >
+          <Snackbar
+            visible={snackBarVisible}
+            message={messages.length > 0 && messages.slice(-1)[0].text}
+            onRequestClose={() => setSnackBarVisibile(false)}
+            onPress={() => {
+              setSnackBarVisibile(false);
+            }}
+          />
+        </View>
+      )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center"
-  }
-});

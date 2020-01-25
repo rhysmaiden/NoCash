@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, TextInput } from "react-native";
 import { Button } from "react-native-material-ui";
 import io from "socket.io-client";
+import PrimaryButton from "../components/primaryButton";
 import {
   TextField,
   FilledTextField,
@@ -37,11 +38,8 @@ export default function JoinRoom({ navigation }) {
         value={room}
       />
 
-      <Button
-        style={{ margin: 30 }}
-        raised
-        primary
-        text="Join"
+      <PrimaryButton
+        text="Join Room"
         onPress={() => {
           socket.emit("roomExists", { room }, roomExists => {
             if (roomExists) {
@@ -50,20 +48,9 @@ export default function JoinRoom({ navigation }) {
               setError("Room doesn't exist");
             }
           });
-          //Verify that this exists
-          //Throw error if it doesn't exist
         }}
       />
       <Text>{error}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center"
-  }
-});

@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Button } from "react-native-material-ui";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  ActivityIndicator
+} from "react-native";
+import { Button, ListItem, IconToggle } from "react-native-material-ui";
+import UserPlate from "../components/userPlate.js";
+import PrimaryButton from "../components/primaryButton";
 
 import {
   TextField,
@@ -55,32 +63,49 @@ export default function Pay({ navigation }) {
   //TODO: RUn loading animation on button click and tick before going back
 
   return (
-    <View style={{ padding: 10 }}>
-      <Text>{user.name}</Text>
-      <Text>{user.cash}</Text>
-      <TextField
-        label="Amount"
-        onChangeText={amount => setAmount(amount)}
-        prefix="$"
-        value={amount && amount}
-        keyboardType="phone-pad"
+    <ScrollView style={{}}>
+      <UserPlate
+        name={navigation.getParam("name")}
+        cash={navigation.getParam("cash")}
+        room={""}
+        version="small"
       />
-      <Button
-        style={{ margin: 30 }}
-        raised
-        primary
-        text="Send money"
-        onPress={sendMoney}
+      <ListItem
+        divider
+        centerElement={
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <IconToggle name={user.type == "human" ? "person" : "computer"} />
+            <Text>
+              {user.name}: ${user.cash}
+            </Text>
+          </View>
+        }
+        onPress={() => {}}
       />
-      <Button
-        style={{ margin: 30 }}
-        raised
-        primary
-        text="Request money"
-        onPress={requestMoney}
-      />
-      <Text>{error}</Text>
-    </View>
+      <View style={{ padding: 10, backgroundColor: "white" }}>
+        <TextField
+          label="Amount"
+          onChangeText={amount => setAmount(amount)}
+          prefix="$"
+          value={amount && amount}
+          keyboardType="phone-pad"
+        />
+        <PrimaryButton
+          text="Send money"
+          onPress={() => {
+            sendMoney();
+          }}
+        />
+        <PrimaryButton
+          text="Request money"
+          onPress={() => {
+            requestMoney();
+          }}
+        />
+
+        <Text>{error}</Text>
+      </View>
+    </ScrollView>
   );
 }
 
