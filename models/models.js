@@ -7,7 +7,8 @@ const UserSchema = new Schema({
   },
   cash: Number,
   socket_id: String,
-  type: String
+  type: String,
+  room_name: String
 });
 
 const MessageSchema = new Schema({

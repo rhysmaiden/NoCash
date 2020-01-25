@@ -29,15 +29,14 @@ function changeMoney(socket_id, amount) {
 io.on("connection", async socket => {
   console.log("New connection");
 
-  socket.on("disconnect", () => {
-    const user = removeUser(socket.id);
-    if (user) {
-      io.to(user.room).emit("message", {
-        user: "admin",
-        text: `${user.name} has left the room`
-      });
+  socket.on(
+    "close",
+    async ({ nameString: name, roomString: room }, callback) => {
+      console.log("Disconnect");
+
+      socket.disconnect();
     }
-  });
+  );
 
   socket.on(
     "join",
@@ -45,9 +44,9 @@ io.on("connection", async socket => {
       var user = null;
       let currentRoom;
 
-      name = name.trim();
+      console.log(Object.keys(io.sockets.sockets).length);
 
-      console.log("Room name", room);
+      name = name.trim();
 
       socket.join(room);
 
@@ -60,14 +59,15 @@ io.on("connection", async socket => {
         }
       });
 
-      await User.findOne({ name: name }).then(async record => {
+      await User.findOne({ name: name, room_name: room }).then(async record => {
         //Create new user
         if (record === null) {
           var newUser = new User({
             name: name,
             cash: currentRoom.playerAmount,
             socket_id: socket.id,
-            type: "human"
+            type: "human",
+            room_name: room
           });
 
           newUser.save();
@@ -84,10 +84,9 @@ io.on("connection", async socket => {
           // If user is returning
         } else {
           User.updateOne(
-            { name: name },
+            { name: name, room_name: room },
             { $set: { socket_id: socket.id } }
           ).then(changedUser => {
-            console.log(currentRoom.users);
             io.in(room).emit("users", currentRoom.users);
             io.in(room).emit("messages", currentRoom.messages);
           });
@@ -114,24 +113,32 @@ io.on("connection", async socket => {
               playerAmount: playerAmount
             });
 
-            await computerPlayers.map(computerPlayer => {
-              var botObject = new User({
-                name: computerPlayer.name,
-                cash: computerPlayer.amount,
-                type: "bot"
-              });
-              botObject.save().then(bot => {
-                roomObject.users.push(bot);
+            if (computerPlayers.length > 0) {
+              await computerPlayers.map(computerPlayer => {
+                var botObject = new User({
+                  name: computerPlayer.name,
+                  cash: computerPlayer.amount,
+                  type: "bot",
+                  room_name: roomName
+                });
+                botObject.save().then(bot => {
+                  roomObject.users.push(bot);
 
-                //The roomObject was being saved before the users had to been added due to it being asynchronous
-                if (roomObject.users.length === computerPlayers.length) {
-                  roomObject.save().then(p => {
-                    console.log("New room created: ", roomName);
-                    callback("Room created");
-                  });
-                }
+                  //The roomObject was being saved before the users had to been added due to it being asynchronous
+                  if (roomObject.users.length === computerPlayers.length) {
+                    roomObject.save().then(p => {
+                      console.log("New room created: ", roomName);
+                      callback("Room created");
+                    });
+                  }
+                });
               });
-            });
+            } else {
+              roomObject.save().then(p => {
+                console.log("New room created: ", roomName);
+                callback("Room created");
+              });
+            }
           }
         });
     }
@@ -148,37 +155,6 @@ io.on("connection", async socket => {
         }
       });
   });
-
-  //TODO: CLEANUP OR DLEETE vvvvvvvvv
-
-  //   socket.on("sendMessage", (message, callback) => {
-  //     console.log("RECIEVED MESSAGE");
-  //     User.findOne({ socket_id: socket.id }).then(user => {
-  //       if (!user) {
-  //         callback();
-  //       } else {
-  //         console.log("SEND MESSAGE");
-  //         io.to(message.room).emit("message", {
-  //           user: user.name,
-  //           text: message.text
-  //         });
-
-  //         //Creat message
-  //         newMessage = new Message({ text: message.text, user: user });
-  //         newMessage.save();
-
-  //         //Add message to room
-  //         Room.updateOne(
-  //           { name: message.room },
-  //           { $push: { messages: newMessage } }
-  //         ).then(() => {
-  //           console.log("Added message to db");
-  //         });
-  //       }
-  //     });
-
-  //     callback();
-  //   });
 
   socket.on(
     "sendMoney",
@@ -213,7 +189,7 @@ io.on("connection", async socket => {
                   console.log("Sent users to room");
                   io.to(room).emit("message", {
                     user: "Admin",
-                    text: `${roomObject.users[recieverIndex].name} sent $${amount} to ${roomObject.users[giverIndex].name}`
+                    text: `${roomObject.users[giverIndex].name} sent $${amount} to ${roomObject.users[recieverIndex].name}`
                   });
                   callback();
                 });
@@ -275,25 +251,27 @@ io.on("connection", async socket => {
       if (amountInt > 0) {
         Room.findOne({ name: room }).then(roomObject => {
           if (roomObject != null) {
-            User.findOne({ name: roomObject.users[recieverIndex].name }).then(
-              recievingUser => {
-                if (recievingUser.type == "bot") {
-                  requestBotMoney(
-                    roomObject,
-                    room,
-                    amountInt,
-                    recieverIndex,
-                    giverIndex,
-                    callback
-                  );
-                } else {
-                  io.to(`${recievingUser.socket_id}`).emit("moneyRequest", {
-                    requestingUser: giverIndex,
-                    amount: amountInt
-                  });
-                }
+            User.findOne({
+              name: roomObject.users[recieverIndex].name,
+              room_name: room
+            }).then(recievingUser => {
+              if (recievingUser.type == "bot") {
+                requestBotMoney(
+                  roomObject,
+                  room,
+                  amountInt,
+                  recieverIndex,
+                  giverIndex,
+                  callback
+                );
+              } else {
+                io.to(`${recievingUser.socket_id}`).emit("moneyRequest", {
+                  requestingUser: giverIndex,
+                  amount: amountInt
+                });
+                callback("Done");
               }
-            );
+            });
           }
         });
       } else {
