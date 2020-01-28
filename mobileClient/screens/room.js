@@ -1,29 +1,10 @@
 import React, { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Modal,
-  ActivityIndicator,
-  Button
-} from "react-native";
+import { Text, View, ScrollView } from "react-native";
 import io from "socket.io-client";
 import UserPlate from "../components/userPlate.js";
 import RoomUsers from "../components/roomUsers.js";
-import Dialog, {
-  DialogContent,
-  DialogFooter,
-  DialogButton,
-  DialogTitle
-} from "react-native-popup-dialog";
-
-import {
-  ListItem,
-  Card,
-  DialogDefaultActions,
-  Snackbar
-} from "react-native-material-ui";
+import Popup from "../components/popup.js";
+import { Snackbar } from "react-native-material-ui";
 
 let socket;
 
@@ -34,12 +15,12 @@ export default function Room({ navigation }) {
   const [messages, setMessages] = useState([]);
   const [cash, setCash] = useState(0);
   const [myIndex, setMyIndex] = useState(0);
-  const [myInfo, setMyInfo] = useState(null);
   const [popup, setPopup] = useState(false);
   const [request, setRequest] = useState(null);
   const [snackBarVisible, setSnackBarVisibile] = useState(false);
 
-  const ENDPOINT = "http://192.168.1.101:5000/";
+  //const ENDPOINT = "http://192.168.1.101:5000/";
+  const ENDPOINT = "https://nochash-backend.herokuapp.com/";
 
   useEffect(() => {
     const nameString = navigation.getParam("name");
@@ -56,8 +37,6 @@ export default function Room({ navigation }) {
       socket.emit("close", callback => {
         console.log("Disconnect");
       });
-
-      console.log("DISCONESSISO");
 
       socket.off();
     };
@@ -100,7 +79,7 @@ export default function Room({ navigation }) {
       request.requestingUser,
       myIndex,
       () => {
-        console.log("Sent reqquest money");
+        console.log("Accept request");
       }
     );
   };
@@ -118,63 +97,48 @@ export default function Room({ navigation }) {
   };
 
   return (
-    <ScrollView>
-      <UserPlate name={name} cash={cash} room={room} version="large" />
-      <RoomUsers users={users} name={name} payUser={payUser} />
+    <View style={{ flex: 1 }}>
+      <ScrollView>
+        <UserPlate name={name} cash={cash} room={room} version="large" />
+        <RoomUsers users={users} name={name} payUser={payUser} />
 
-      {popup && (
-        <Dialog
-          footer={
-            <DialogFooter>
-              <DialogButton text="DECLINE" onPress={() => setPopup(false)} />
-              <DialogButton
-                text="ACCEPT"
-                onPress={() => {
-                  console.log(popup);
-                  acceptRequest();
-                  setPopup(false);
-                }}
-              />
-            </DialogFooter>
-          }
-          dialogTitle={<DialogTitle title="Money Request" />}
-          visible={popup}
-          onTouchOutside={() => {}}
-        >
-          <DialogContent
-            style={{
-              margin: 10
+        <View>
+          <Popup
+            title="Money Request"
+            message={`${popup &&
+              users[request.requestingUser].name} is requesting $${popup &&
+              request.amount} from you.`}
+            options={["Decline", "Accept"]}
+            onSelectOption={index => {
+              if (index == 1) {
+                acceptRequest();
+              }
+
+              console.log("popup false");
+
+              setPopup(false);
             }}
-          >
-            {popup && (
-              <Text>
-                {`${users[request.requestingUser].name} is requesting $${
-                  request.amount
-                } from you.`}
-              </Text>
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
-      {snackBarVisible && (
-        <View
-          style={{
-            bottom: 15,
-            position: "absolute",
-            width: "100%",
-            backgroundColor: "red"
-          }}
-        >
-          <Snackbar
-            visible={snackBarVisible}
-            message={messages.length > 0 && messages.slice(-1)[0].text}
-            onRequestClose={() => setSnackBarVisibile(false)}
-            onPress={() => {
-              setSnackBarVisibile(false);
-            }}
+            popup={popup}
           />
         </View>
-      )}
-    </ScrollView>
+      </ScrollView>
+
+      <View
+        style={{
+          bottom: 15,
+          position: "absolute",
+          width: "100%"
+        }}
+      >
+        <Snackbar
+          visible={snackBarVisible}
+          message={messages.length > 0 && messages.slice(-1)[0].text}
+          onRequestClose={() => setSnackBarVisibile(false)}
+          onPress={() => {
+            setSnackBarVisibile(false);
+          }}
+        />
+      </View>
+    </View>
   );
 }
