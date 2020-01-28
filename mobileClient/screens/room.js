@@ -30,7 +30,7 @@ export default function Room({ navigation }) {
     socket = io(ENDPOINT);
 
     socket.emit("join", { nameString, roomString }, info => {
-      console.log(info);
+      console.log("Joined room");
     });
 
     return () => {
@@ -48,6 +48,7 @@ export default function Room({ navigation }) {
     });
   }, [users]);
 
+  //Always be able to recueve messages and money requesrs
   useEffect(() => {
     socket.on("moneyRequest", request => {
       setRequest(request);
@@ -60,6 +61,7 @@ export default function Room({ navigation }) {
     });
   }, []);
 
+  //Makes sure that the users name and the users in room have been received from server
   useEffect(() => {
     if (name != "" && users.length != 0) {
       users.map((u, index) => {
@@ -113,8 +115,6 @@ export default function Room({ navigation }) {
               if (index == 1) {
                 acceptRequest();
               }
-
-              console.log("popup false");
 
               setPopup(false);
             }}
