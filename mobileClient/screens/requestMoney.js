@@ -52,28 +52,26 @@ const sendMoney = ({ navigation }) => {
       }
     });
 
-    console.log(amount);
-
-    console.log(usersChecked * amount);
-
     setTotalAmount(usersChecked * amount);
   }, [users]);
 
-  const sendMoney = () => {
-    if (totalAmount > cash) {
-      setError("You don't have the funds");
-    } else if (totalAmount < 0) {
-      setError("Sneaky sneaky");
-    } else {
-      const recieverIndexes = [];
-      users.map((user, index) => {
-        user.checked && recieverIndexes.push(index);
-      });
+  const requestMoney = () => {
+    const requestingIndexes = [];
+    users.map((user, index) => {
+      user.checked && requestingIndexes.push(index);
+    });
 
-      socket.emit("sendMoney", room, amount, recieverIndexes, myIndex, () => {
+    socket.emit(
+      "requestMoney",
+      room,
+      amount,
+      myIndex,
+      requestingIndexes,
+
+      () => {
         navigation.pop();
-      });
-    }
+      }
+    );
   };
 
   const checkUser = index => {
@@ -126,9 +124,9 @@ const sendMoney = ({ navigation }) => {
           keyboardType="phone-pad"
         />
         <PrimaryButton
-          text="Send money"
+          text="Request money"
           onPress={() => {
-            sendMoney();
+            requestMoney();
           }}
         />
 

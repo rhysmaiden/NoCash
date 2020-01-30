@@ -52,6 +52,7 @@ export default function Room({ navigation }) {
   //Always be able to recueve messages and money requesrs
   useEffect(() => {
     socket.on("moneyRequest", request => {
+      console.log("Recieved request");
       setRequest(request);
       setPopup(true);
     });
@@ -80,12 +81,16 @@ export default function Room({ navigation }) {
       "sendMoney",
       room,
       request.amount,
-      request.requestingUser,
+      [request.requestingUser],
       myIndex,
       () => {
         console.log("Accept request");
       }
     );
+  };
+
+  const declineRequest = () => {
+    socket.emit("declineRequest", room, request.requestingUser, myIndex);
   };
 
   const payUser = index => {
@@ -111,6 +116,19 @@ export default function Room({ navigation }) {
             navigation.navigate("SendMoney", { myIndex, users, room, socket });
           }}
         />
+        <PrimaryButton
+          text="Request Money"
+          onPress={() => {
+            console.log("Pressed");
+            navigation.navigate("RequestMoney", {
+              myIndex,
+              users,
+              room,
+              socket
+            });
+          }}
+        />
+
         <RoomUsers users={users} name={name} payUser={payUser} />
 
         <View>
@@ -123,6 +141,8 @@ export default function Room({ navigation }) {
             onSelectOption={index => {
               if (index == 1) {
                 acceptRequest();
+              } else {
+                declineRequest();
               }
 
               setPopup(false);
