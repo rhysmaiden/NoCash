@@ -272,9 +272,23 @@ io.on("connection", async socket => {
     });
   };
 
+  socket.on("declineRequest", (room, requesterIndex, decliningUser) => {
+    Room.findOne({ name: room }).then(roomObject => {
+      User.findOne({
+        name: roomObject.users[requesterIndex].name,
+        room_name: room
+      }).then(user => {
+        io.to(`${user.socket_id}`).emit("message", {
+          user: "Admin",
+          text: `${roomObject.users[decliningUser].name} declined your request`
+        });
+      });
+    });
+  });
+
   socket.on(
     "requestMoney",
-    (room, amount, recieverIndex, giverIndex, callback) => {
+    (room, amount, requesterIndex, requestingIndexes, callback) => {
       console.log("Request");
 
       var amountInt = parseInt(amount);
@@ -282,26 +296,29 @@ io.on("connection", async socket => {
       if (amountInt > 0) {
         Room.findOne({ name: room }).then(roomObject => {
           if (roomObject != null) {
-            User.findOne({
-              name: roomObject.users[recieverIndex].name,
-              room_name: room
-            }).then(recievingUser => {
-              if (recievingUser.type == "bot") {
-                requestBotMoney(
-                  roomObject,
-                  room,
-                  amountInt,
-                  recieverIndex,
-                  giverIndex,
-                  callback
-                );
-              } else {
-                io.to(`${recievingUser.socket_id}`).emit("moneyRequest", {
-                  requestingUser: giverIndex,
-                  amount: amountInt
-                });
-                callback("Done");
-              }
+            requestingIndexes.map(requestingIndex => {
+              User.findOne({
+                name: roomObject.users[requestingIndex].name,
+                room_name: room
+              }).then(recievingUser => {
+                if (recievingUser.type == "bot") {
+                  requestBotMoney(
+                    roomObject,
+                    room,
+                    amountInt,
+                    recieverIndex,
+                    giverIndex,
+                    callback
+                  );
+                } else {
+                  console.log("Request", recievingUser.socket_id);
+                  io.to(`${recievingUser.socket_id}`).emit("moneyRequest", {
+                    requestingUser: requesterIndex,
+                    amount: amountInt
+                  });
+                  callback("Done");
+                }
+              });
             });
           }
         });
