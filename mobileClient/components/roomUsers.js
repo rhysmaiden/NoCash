@@ -21,10 +21,6 @@ export default roomUsers = ({ users, name, payUser }) => {
                   </Text>
                 </View>
               }
-              rightElement={<IconToggle name="forward" />}
-              onPress={() => {
-                payUser(index);
-              }}
             />
           )
       )}

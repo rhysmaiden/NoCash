@@ -2,6 +2,7 @@ const express = require("express");
 const socketio = require("socket.io");
 const http = require("http");
 const { mongoose } = require("./connection.js");
+const ObjectId = require("mongodb").ObjectID;
 const { Room, Message, User } = require("./models/models.js");
 const ip = require("ip");
 console.log(ip.address());
@@ -158,7 +159,7 @@ io.on("connection", async socket => {
 
   socket.on(
     "sendMoney",
-    (room, amount, recieverIndex, giverIndex, callback) => {
+    (room, amount, recieverIndexes, giverIndex, callback) => {
       console.log("Send money request");
 
       var amountInt = parseInt(amount);
@@ -169,27 +170,57 @@ io.on("connection", async socket => {
         //Want to find a way to remove this nesting
         Room.findOne({ name: room }).then(roomObject => {
           if (roomObject != null) {
+            console.log(typeof recieverIndexes);
+            const recieverIndexesCopy = [...recieverIndexes];
+            const last_index = recieverIndexesCopy.pop();
+
+            console.log(last_index);
+
+            recieverIndexesCopy.map(recieverIndex => {
+              User.updateOne(
+                //Add money from reciever
+                { name: roomObject.users[recieverIndex].name },
+                { cash: (roomObject.users[recieverIndex].cash += amountInt) }
+              );
+            });
+
             User.updateOne(
               //Add money from reciever
-              { name: roomObject.users[recieverIndex].name },
-              { cash: (roomObject.users[recieverIndex].cash += amountInt) }
+              { name: roomObject.users[last_index].name },
+              { cash: (roomObject.users[last_index].cash += amountInt) }
             ).then(userUpdated => {
               User.updateOne(
                 //Remove money from sender
                 { name: roomObject.users[giverIndex].name },
-                { cash: (roomObject.users[giverIndex].cash -= amountInt) }
+                {
+                  cash: (roomObject.users[giverIndex].cash -=
+                    amountInt * recieverIndexes.length)
+                }
               ).then(giver => {
                 //Update room with updates users
                 Room.updateOne(
                   { name: room },
                   { users: roomObject.users }
                 ).then(updatedRoom => {
-                  console.log(roomObject.users);
                   io.in(room).emit("users", roomObject.users);
                   console.log("Sent users to room");
+                  let userList = "";
+                  recieverIndexes.map((recieverIndex, loopIndex) => {
+                    if (loopIndex == 0) {
+                      userList += roomObject.users[recieverIndex].name;
+                    } else if (loopIndex == recieverIndexes.length - 1) {
+                      userList +=
+                        " and " + roomObject.users[recieverIndex].name;
+                    } else {
+                      userList += ", " + roomObject.users[recieverIndex].name;
+                    }
+                  });
+
+                  console.log(userList);
+
                   io.to(room).emit("message", {
                     user: "Admin",
-                    text: `${roomObject.users[giverIndex].name} sent $${amount} to ${roomObject.users[recieverIndex].name}`
+                    text: `${roomObject.users[giverIndex].name} sent $${amount} to ${userList}`
                   });
                   callback();
                 });

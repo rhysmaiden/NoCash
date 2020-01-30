@@ -20,8 +20,8 @@ export default function Room({ navigation }) {
   const [request, setRequest] = useState(null);
   const [snackBarVisible, setSnackBarVisibile] = useState(false);
 
-  //const ENDPOINT = "http://192.168.1.101:5000/";
-  const ENDPOINT = "https://nochash-backend.herokuapp.com/";
+  const ENDPOINT = "http://192.168.1.101:5000/";
+  // const ENDPOINT = "https://nochash-backend.herokuapp.com/";
 
   useEffect(() => {
     const nameString = navigation.getParam("name");
@@ -59,6 +59,7 @@ export default function Room({ navigation }) {
     socket.on("message", message => {
       setSnackBarVisibile(true);
       setMessages([...messages, message]);
+      console.log("Recieved message");
     });
   }, []);
 

@@ -25,10 +25,13 @@ const sendMoney = ({ navigation }) => {
   const socket = navigation.getParam("socket");
   const username = navigation.getParam("users")[myIndex].name;
   const cash = navigation.getParam("users")[myIndex].cash;
+  const giverId = navigation.getParam("users")[myIndex]._id;
 
   const [error, setError] = useState("");
   const [amount, setAmount] = useState(null);
   const [users, setUsers] = useState([]);
+  const [checkedAll, setCheckedAll] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
 
   useEffect(() => {
     const users = navigation.getParam("users");
@@ -40,20 +43,38 @@ const sendMoney = ({ navigation }) => {
     setUsers(users);
   }, []);
 
+  useEffect(() => {
+    let usersChecked = 0;
+
+    users.forEach(user => {
+      if (user.checked) {
+        usersChecked += 1;
+      }
+    });
+
+    console.log(amount);
+
+    console.log(usersChecked * amount);
+
+    setTotalAmount(usersChecked * amount);
+  }, [users]);
+
   const sendMoney = () => {
-    if (amount > cash) {
+    console.log(totalAmount);
+    //TODO: The amount needs to multiply by number of users to send to
+    if (totalAmount > cash) {
       setError("You don't have the funds");
-    } else if (amount < 0) {
+    } else if (totalAmount < 0) {
       setError("Sneaky sneaky");
     } else {
-      const ids = [];
-      users.map(user => {
-        user.checked && ids.push(user._id);
+      const recieverIndexes = [];
+      users.map((user, index) => {
+        user.checked && recieverIndexes.push(index);
       });
-      console.log(ids);
-      //   socket.emit("sendMoney", room, amount, ids, myIndex, () => {
-      //     navigation.pop();
-      //   });
+
+      socket.emit("sendMoney", room, amount, recieverIndexes, myIndex, () => {
+        navigation.pop();
+      });
     }
   };
 
@@ -63,15 +84,26 @@ const sendMoney = ({ navigation }) => {
     setUsers(tempUsers);
   };
 
+  const checkAll = () => {
+    const tempUsers = [...users];
+    tempUsers.map(tempUser => {
+      tempUser.checked = !checkedAll;
+    });
+    setUsers(tempUsers);
+    setCheckedAll(!checkedAll);
+  };
+
+  //TODO: Bots at the top
+
   return (
     <ScrollView style={{}}>
       <UserPlate name={username} cash={cash} room={room} version="small" />
-      {/* <CheckBox
-          title="All"
-          checked={user.checked}
-          onPress={() => checkUser(index)}
-          checkedColor="rgb(52,186,241)"
-        /> */}
+      <CheckBox
+        title="All"
+        checked={checkedAll}
+        onPress={() => checkAll()}
+        checkedColor="rgb(52,186,241)"
+      />
       {users.map(
         (user, index) =>
           index != myIndex && (
