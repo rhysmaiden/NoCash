@@ -5,6 +5,7 @@ import UserPlate from "../components/userPlate.js";
 import RoomUsers from "../components/roomUsers.js";
 import Popup from "../components/popup.js";
 import { Snackbar } from "react-native-material-ui";
+import PrimaryButton from "../components/primaryButton.js";
 
 let socket;
 
@@ -102,6 +103,13 @@ export default function Room({ navigation }) {
     <View style={{ flex: 1 }}>
       <ScrollView>
         <UserPlate name={name} cash={cash} room={room} version="large" />
+        <PrimaryButton
+          text="Send Money"
+          onPress={() => {
+            console.log("Pressed");
+            navigation.navigate("SendMoney", { myIndex, users, room, socket });
+          }}
+        />
         <RoomUsers users={users} name={name} payUser={payUser} />
 
         <View>

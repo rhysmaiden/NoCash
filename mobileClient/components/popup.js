@@ -8,21 +8,18 @@ import Dialog, {
 
 import { Text } from "react-native";
 
-const Popup = props => {
+const Popup = ({ options, onSelectOption, title, popup, message }) => {
   return (
     <Dialog
       footer={
         <DialogFooter>
-          {props.options.map((option, index) => (
-            <DialogButton
-              text={option}
-              onPress={() => props.onSelectOption(index)}
-            />
+          {options.map((option, index) => (
+            <DialogButton text={option} onPress={() => onSelectOption(index)} />
           ))}
         </DialogFooter>
       }
-      dialogTitle={<DialogTitle title={props.title} />}
-      visible={props.popup}
+      dialogTitle={<DialogTitle title={title} />}
+      visible={popup}
       onTouchOutside={() => {}}
     >
       <DialogContent
@@ -30,7 +27,7 @@ const Popup = props => {
           margin: 10
         }}
       >
-        {<Text>{props.message}</Text>}
+        {<Text>{message}</Text>}
       </DialogContent>
     </Dialog>
   );

@@ -1,26 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
-import { Button, ListItem, Icon, IconToggle } from "react-native-material-ui";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { ListItem, IconToggle } from "react-native-material-ui";
 
-import {
-  TextField,
-  FilledTextField,
-  OutlinedTextField
-} from "react-native-material-textfield";
-
-export default roomUsers = props => {
-  useEffect(() => {}, []);
-
+export default roomUsers = ({ users, name, payUser }) => {
   return (
     <View>
-      {props.users.map(
+      {users.map(
         (user, index) =>
-          user.name != props.name && (
+          user.name != name && (
             <ListItem
               key={user.name}
               divider
               centerElement={
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View style={styles.centerElement}>
                   <IconToggle
                     name={user.type == "human" ? "person" : "computer"}
                   />
@@ -31,8 +23,7 @@ export default roomUsers = props => {
               }
               rightElement={<IconToggle name="forward" />}
               onPress={() => {
-                console.log("Pressed");
-                props.payUser(index);
+                payUser(index);
               }}
             />
           )
@@ -40,3 +31,10 @@ export default roomUsers = props => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  centerElement: {
+    flexDirection: "row",
+    alignItems: "center"
+  }
+});

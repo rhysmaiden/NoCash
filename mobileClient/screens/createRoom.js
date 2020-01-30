@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import {
-  TextField,
-  FilledTextField,
-  OutlinedTextField
-} from "react-native-material-textfield";
+import { Text, View } from "react-native";
+import { TextField } from "react-native-material-textfield";
 import io from "socket.io-client";
 
 let socket;
@@ -108,12 +104,3 @@ export default function CreateRoom({ navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center"
-  }
-});

@@ -5,6 +5,7 @@ import CreateRoom from "../screens/createRoom.js";
 import Room from "../screens/room.js";
 import Pay from "../screens/pay.js";
 import JoinRoom from "../screens/joinRoom.js";
+import SendMoney from "../screens/sendMoney.js";
 
 const screens = {
   Home: {
@@ -22,6 +23,9 @@ const screens = {
   },
   Pay: {
     screen: Pay
+  },
+  SendMoney: {
+    screen: SendMoney
   }
 };
 
