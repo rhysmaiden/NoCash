@@ -34,7 +34,8 @@ const screens = {
 };
 
 const HomeStack = createStackNavigator(screens, {
-  mode: "modal"
+  mode: "modal",
+  headerMode: "none"
 });
 
 export default createAppContainer(HomeStack);

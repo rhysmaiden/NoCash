@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Text, View, ScrollView } from "react-native";
+import { View, ScrollView, StyleSheet } from "react-native";
 import io from "socket.io-client";
 import UserPlate from "../components/userPlate.js";
 import RoomUsers from "../components/roomUsers.js";
@@ -49,7 +49,6 @@ export default function Room({ navigation }) {
     });
   }, [users]);
 
-  //Always be able to recueve messages and money requesrs
   useEffect(() => {
     socket.on("moneyRequest", request => {
       console.log("Recieved request");
@@ -106,28 +105,33 @@ export default function Room({ navigation }) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "white" }}>
       <ScrollView>
         <UserPlate name={name} cash={cash} room={room} version="large" />
-        <PrimaryButton
-          text="Send Money"
-          onPress={() => {
-            console.log("Pressed");
-            navigation.navigate("SendMoney", { myIndex, users, room, socket });
-          }}
-        />
-        <PrimaryButton
-          text="Request Money"
-          onPress={() => {
-            console.log("Pressed");
-            navigation.navigate("RequestMoney", {
-              myIndex,
-              users,
-              room,
-              socket
-            });
-          }}
-        />
+        <View style={styles.actions}>
+          <PrimaryButton
+            text="Send Money"
+            onPress={() => {
+              navigation.navigate("SendMoney", {
+                myIndex,
+                users,
+                room,
+                socket
+              });
+            }}
+          />
+          <PrimaryButton
+            text="Request Money"
+            onPress={() => {
+              navigation.navigate("RequestMoney", {
+                myIndex,
+                users,
+                room,
+                socket
+              });
+            }}
+          />
+        </View>
 
         <RoomUsers users={users} name={name} payUser={payUser} />
 
@@ -152,13 +156,7 @@ export default function Room({ navigation }) {
         </View>
       </ScrollView>
 
-      <View
-        style={{
-          bottom: 15,
-          position: "absolute",
-          width: "100%"
-        }}
-      >
+      <View style={styles.snackBar}>
         <Snackbar
           visible={snackBarVisible}
           message={messages.length > 0 && messages.slice(-1)[0].text}
@@ -171,3 +169,17 @@ export default function Room({ navigation }) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  actions: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 10
+  },
+  snackBar: {
+    bottom: 15,
+    position: "absolute",
+    width: "100%"
+  }
+});

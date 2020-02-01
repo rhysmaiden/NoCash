@@ -7,18 +7,13 @@ import {
   ScrollView,
   ActivityIndicator
 } from "react-native";
-import { Button, ListItem, IconToggle } from "react-native-material-ui";
+
 import UserPlate from "../components/userPlate.js";
 import PrimaryButton from "../components/primaryButton";
 import { CheckBox } from "react-native-elements";
+import { TextField, OutlinedTextField } from "react-native-material-textfield";
 
-import {
-  TextField,
-  FilledTextField,
-  OutlinedTextField
-} from "react-native-material-textfield";
-
-const sendMoney = ({ navigation }) => {
+export default function sendMoney({ navigation }) {
   const myIndex = navigation.getParam("myIndex");
 
   const room = navigation.getParam("room");
@@ -44,6 +39,12 @@ const sendMoney = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    return () => {
+      navigation.navigate("sendMoney");
+    };
+  }, []);
+
+  useEffect(() => {
     let usersChecked = 0;
 
     users.forEach(user => {
@@ -51,10 +52,6 @@ const sendMoney = ({ navigation }) => {
         usersChecked += 1;
       }
     });
-
-    console.log(amount);
-
-    console.log(usersChecked * amount);
 
     setTotalAmount(usersChecked * amount);
   }, [users]);
@@ -94,13 +91,34 @@ const sendMoney = ({ navigation }) => {
   //TODO: Bots at the top
 
   return (
-    <ScrollView style={{}}>
-      <UserPlate name={username} cash={cash} room={room} version="small" />
+    <ScrollView style={{ backgroundColor: "white" }}>
+      <UserPlate
+        name={username}
+        cash={cash}
+        room={room}
+        total={totalAmount}
+        version="small"
+      />
+
+      <View style={styles.textfield}>
+        <OutlinedTextField
+          label="Amount per player"
+          onChangeText={amount => {
+            setAmount(amount);
+            setError("");
+          }}
+          prefix="$"
+          value={amount && amount}
+          keyboardType="phone-pad"
+        />
+      </View>
+
       <CheckBox
         title="All"
         checked={checkedAll}
         onPress={() => checkAll()}
         checkedColor="rgb(52,186,241)"
+        containerStyle={{ margin: 0 }}
       />
       {users.map(
         (user, index) =>
@@ -110,32 +128,28 @@ const sendMoney = ({ navigation }) => {
               checked={user.checked}
               onPress={() => checkUser(index)}
               checkedColor="rgb(52,186,241)"
+              containerStyle={{ margin: 2 }}
             />
           )
       )}
 
-      <View style={{ padding: 10, backgroundColor: "white" }}>
-        <TextField
-          label="Amount"
-          onChangeText={amount => {
-            setAmount(amount);
-            setError("");
-          }}
-          prefix="$"
-          value={amount && amount}
-          keyboardType="phone-pad"
-        />
+      <View style={{ padding: 10 }}>
         <PrimaryButton
           text="Send money"
           onPress={() => {
             sendMoney();
           }}
         />
-
-        <Text>{error}</Text>
       </View>
+
+      <Text>{error}</Text>
     </ScrollView>
   );
-};
+}
 
-export default sendMoney;
+const styles = StyleSheet.create({
+  textfield: {
+    padding: 10,
+    marginBottom: 20
+  }
+});

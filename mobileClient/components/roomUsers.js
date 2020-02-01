@@ -21,7 +21,7 @@ export default roomUsers = ({ users, name, payUser }) => {
                   </Text>
                 </View>
               }
-              onPress={payUser}
+              // onPress={payUser}
             />
           )
       )}

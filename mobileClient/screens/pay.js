@@ -18,7 +18,7 @@ import {
 
 export default function Pay({ navigation }) {
   const [index, setIndex] = useState(0);
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(null);
   const [availableFunds, setAvailableFunds] = useState(0);
   const [amount, setAmount] = useState(null);
   const [myIndex, setMyIndex] = useState(0);

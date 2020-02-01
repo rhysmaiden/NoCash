@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
 
 //TODO: Refactor Large and small into one contained class
 
-export default userPlate = ({ cash, name, version }) => {
+export default userPlate = ({ cash, name, version, total }) => {
   return (
     <View style={{ padding: 10 }}>
       {version == "large" ? (
@@ -24,6 +24,9 @@ export default userPlate = ({ cash, name, version }) => {
           <View style={smallStyles.circle}>
             <Text style={smallStyles.money}>${cash}</Text>
             <Text style={smallStyles.username}>{name}</Text>
+          </View>
+          <View>
+            <Text>{total}</Text>
           </View>
         </View>
       )}
@@ -66,9 +69,12 @@ const largeStyles = StyleSheet.create({
 
 const smallStyles = StyleSheet.create({
   plate: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+
     backgroundColor: "white",
     padding: 20,
-    justifyContent: "center",
+
     borderBottomColor: "gray",
     borderBottomWidth: 0.5,
     borderRadius: 50,
