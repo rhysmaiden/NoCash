@@ -9,6 +9,7 @@ import {
   OutlinedTextField
 } from "react-native-material-textfield";
 import PageHeader from "../components/pageHeader.js";
+import BackButton from "../components/backButton.js";
 
 let socket;
 
@@ -26,6 +27,11 @@ export default function JoinRoom({ navigation }) {
 
   return (
     <View style={styles.page}>
+      <BackButton
+        clicked={() => {
+          navigation.goBack();
+        }}
+      />
       <PageHeader
         title="Join Room"
         description="Choose a name for yourself and connect to an existing room"

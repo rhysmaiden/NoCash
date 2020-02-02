@@ -6,6 +6,7 @@ import RoomUsers from "../components/roomUsers.js";
 import Popup from "../components/popup.js";
 import { Snackbar } from "react-native-material-ui";
 import PrimaryButton from "../components/primaryButton.js";
+import BackButton from "../components/backButton.js";
 
 let socket;
 
@@ -107,12 +108,24 @@ export default function Room({ navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <ScrollView>
+        <View style={{ paddingLeft: 20, backgroundColor: "rgb(52, 186, 241)" }}>
+          <BackButton
+            clicked={() => {
+              navigation.goBack();
+            }}
+            buttonColor="white"
+            backdropColor="rgb(52, 186, 241)"
+          />
+        </View>
+
         <UserPlate name={name} cash={cash} room={room} version="large" />
         <View style={styles.actions}>
           <PrimaryButton
-            text="Send Money"
+            text="Request"
+            type="inverse"
+            width="130"
             onPress={() => {
-              navigation.navigate("SendMoney", {
+              navigation.navigate("RequestMoney", {
                 myIndex,
                 users,
                 room,
@@ -121,9 +134,11 @@ export default function Room({ navigation }) {
             }}
           />
           <PrimaryButton
-            text="Request Money"
+            type="inverse"
+            text="Send"
+            width="130"
             onPress={() => {
-              navigation.navigate("RequestMoney", {
+              navigation.navigate("SendMoney", {
                 myIndex,
                 users,
                 room,
@@ -174,8 +189,9 @@ const styles = StyleSheet.create({
   actions: {
     flex: 1,
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10
+    justifyContent: "space-evenly",
+    padding: 10,
+    backgroundColor: "rgb(52, 186, 241)"
   },
   snackBar: {
     bottom: 15,

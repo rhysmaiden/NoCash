@@ -3,18 +3,18 @@ import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
 
 //TODO: Refactor Large and small into one contained class
 
-export default userPlate = ({ cash, name, version, total }) => {
+export default userPlate = ({ cash, room, version, total }) => {
   return (
-    <View style={{ padding: 10 }}>
+    <View>
       {version == "large" ? (
         <View style={largeStyles.plate}>
+          <Text style={largeStyles.roomName}>{room}</Text>
           <View style={largeStyles.circle}>
             {cash == 0 ? (
               <ActivityIndicator size="large" color="white" />
             ) : (
               <View>
                 <Text style={largeStyles.money}>${cash}</Text>
-                <Text style={largeStyles.username}>{name}</Text>
               </View>
             )}
           </View>
@@ -37,32 +37,35 @@ export default userPlate = ({ cash, name, version, total }) => {
 const largeStyles = StyleSheet.create({
   plate: {
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-evenly",
     textAlign: "center",
     backgroundColor: "white",
     padding: 20,
     justifyContent: "space-evenly",
-    borderBottomColor: "gray",
-    borderBottomWidth: 0.5,
     backgroundColor: "rgb(52,186,241)",
-    borderRadius: 50
+    height: 300
   },
   circle: {
     borderRadius: 100,
-    borderColor: "white",
-    borderWidth: 5,
+
+    backgroundColor: "white",
     justifyContent: "center",
-    height: 200,
-    width: 200
+    alignItems: "center",
+    height: 160,
+    width: 160
   },
   money: {
     textAlign: "center",
-    fontSize: 40,
-    color: "white"
+    fontSize: 55,
+    color: "#1986B2"
   },
   username: {
     textAlign: "center",
     fontSize: 15,
+    color: "white"
+  },
+  roomName: {
+    fontSize: 48,
     color: "white"
   }
 });

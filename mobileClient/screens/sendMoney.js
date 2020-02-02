@@ -12,6 +12,8 @@ import UserPlate from "../components/userPlate.js";
 import PrimaryButton from "../components/primaryButton";
 import { CheckBox } from "react-native-elements";
 import { TextField, OutlinedTextField } from "react-native-material-textfield";
+import PageHeader from "../components/pageHeader.js";
+import BackButton from "../components/backButton.js";
 
 export default function sendMoney({ navigation }) {
   const myIndex = navigation.getParam("myIndex");
@@ -54,7 +56,7 @@ export default function sendMoney({ navigation }) {
     });
 
     setTotalAmount(usersChecked * amount);
-  }, [users]);
+  }, [users, amount]);
 
   const sendMoney = () => {
     if (totalAmount > cash) {
@@ -76,6 +78,7 @@ export default function sendMoney({ navigation }) {
   const checkUser = index => {
     const tempUsers = [...users];
     tempUsers[index].checked = !tempUsers[index].checked;
+
     setUsers(tempUsers);
   };
 
@@ -91,14 +94,22 @@ export default function sendMoney({ navigation }) {
   //TODO: Bots at the top
 
   return (
-    <ScrollView style={{ backgroundColor: "white" }}>
-      <UserPlate
-        name={username}
-        cash={cash}
-        room={room}
-        total={totalAmount}
-        version="small"
+    <ScrollView
+      style={{
+        backgroundColor: "white",
+        padding: 20
+      }}
+    >
+      <BackButton
+        clicked={() => {
+          navigation.goBack();
+        }}
       />
+      <PageHeader
+        title="Send Money"
+        description="Select the users and the amount that you would like to send"
+      />
+      <Text style={styles.balance}>Balance: ${cash}</Text>
 
       <View style={styles.textfield}>
         <OutlinedTextField
@@ -113,27 +124,41 @@ export default function sendMoney({ navigation }) {
         />
       </View>
 
-      <CheckBox
-        title="All"
-        checked={checkedAll}
-        onPress={() => checkAll()}
-        checkedColor="rgb(52,186,241)"
-        containerStyle={{ margin: 0 }}
-      />
-      {users.map(
-        (user, index) =>
-          index != myIndex && (
+      <View style={styles.checkList}>
+        <View style={styles.userRow}>
+          <View style={styles.leftRow}>
             <CheckBox
-              title={`${user.name}: ${user.cash}`}
-              checked={user.checked}
-              onPress={() => checkUser(index)}
+              checked={checkedAll}
+              onPress={() => checkAll()}
               checkedColor="rgb(52,186,241)"
-              containerStyle={{ margin: 2 }}
+              containerStyle={styles.checkBoxContainer}
             />
-          )
-      )}
+            <Text>All</Text>
+          </View>
+        </View>
 
-      <View style={{ padding: 10 }}>
+        {users.map(
+          (user, index) =>
+            index != myIndex && (
+              <View style={styles.userRow}>
+                <View style={styles.leftRow}>
+                  <CheckBox
+                    checked={user.checked}
+                    onPress={() => checkUser(index)}
+                    checkedColor="rgb(52,186,241)"
+                    containerStyle={styles.checkBoxContainer}
+                  />
+                  <Text>{user.name}</Text>
+                </View>
+                <Text>${user.cash}</Text>
+              </View>
+            )
+        )}
+      </View>
+
+      <Text style={styles.total}>Total: ${totalAmount}</Text>
+
+      <View style={{ marginBottom: 80 }}>
         <PrimaryButton
           text="Send money"
           onPress={() => {
@@ -149,7 +174,36 @@ export default function sendMoney({ navigation }) {
 
 const styles = StyleSheet.create({
   textfield: {
-    padding: 10,
+    marginTop: 20,
     marginBottom: 20
+  },
+  balance: {
+    fontSize: 18,
+    fontWeight: "bold"
+  },
+  total: {
+    fontSize: 24,
+    marginBottom: 20
+  },
+  checkBoxContainer: {
+    backgroundColor: "white",
+    borderTopWidth: 0,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    paddingLeft: 0
+  },
+  userRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: "#BBB4B4"
+  },
+  leftRow: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  checkList: {
+    marginBottom: 40
   }
 });

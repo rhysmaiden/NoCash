@@ -4,6 +4,7 @@ import { TextField } from "react-native-material-textfield";
 import io from "socket.io-client";
 import PageHeader from "../components/pageHeader.js";
 import PrimaryButton from "../components/primaryButton.js";
+import BackButton from "../components/backButton.js";
 
 let socket;
 
@@ -40,6 +41,11 @@ export default function CreateRoom({ navigation }) {
 
   return (
     <ScrollView style={styles.page}>
+      <BackButton
+        clicked={() => {
+          navigation.goBack();
+        }}
+      />
       <PageHeader
         title="Create Room"
         description="Setup a new room for you and your friends"
