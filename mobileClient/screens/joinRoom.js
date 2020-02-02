@@ -8,6 +8,7 @@ import {
   FilledTextField,
   OutlinedTextField
 } from "react-native-material-textfield";
+import PageHeader from "../components/pageHeader.js";
 
 let socket;
 
@@ -24,34 +25,54 @@ export default function JoinRoom({ navigation }) {
   }, []);
 
   return (
-    <View style={{ padding: 10 }}>
-      <TextField
-        label="Your Name"
-        onChangeText={text => setName(text)}
-        value={name}
+    <View style={styles.page}>
+      <PageHeader
+        title="Join Room"
+        description="Choose a name for yourself and connect to an existing room"
       />
-      <TextField
-        label="Room Name"
-        onChangeText={text => {
-          setRoom(text);
-          setError("");
-        }}
-        value={room}
-      />
+      <View style={styles.form}>
+        <TextField
+          label="Your Name"
+          onChangeText={text => setName(text)}
+          value={name}
+        />
+        <TextField
+          label="Room Name"
+          onChangeText={text => {
+            setRoom(text);
+            setError("");
+          }}
+          value={room}
+        />
 
-      <PrimaryButton
-        text="Join Room"
-        onPress={() => {
-          socket.emit("roomExists", { room }, roomExists => {
-            if (roomExists) {
-              navigation.navigate("Room", { name, room });
-            } else {
-              setError("Room doesn't exist");
-            }
-          });
-        }}
-      />
-      <Text>{error}</Text>
+        <PrimaryButton
+          text="Join Room"
+          onPress={() => {
+            socket.emit("roomExists", { room }, roomExists => {
+              if (roomExists) {
+                navigation.navigate("Room", { name, room });
+              } else {
+                setError("Room doesn't exist");
+              }
+            });
+          }}
+        />
+        {error != "" && <Text style={styles.error}>Error: {error}</Text>}
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  page: {
+    padding: 20,
+    backgroundColor: "white",
+    flex: 1
+  },
+  form: {
+    justifyContent: "space-evenly"
+  },
+  error: {
+    color: "red"
+  }
+});

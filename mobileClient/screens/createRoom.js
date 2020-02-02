@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Text, View } from "react-native";
+import { Text, View, StyleSheet, ScrollView } from "react-native";
 import { TextField } from "react-native-material-textfield";
 import io from "socket.io-client";
+import PageHeader from "../components/pageHeader.js";
+import PrimaryButton from "../components/primaryButton.js";
 
 let socket;
 
@@ -21,86 +23,123 @@ export default function CreateRoom({ navigation }) {
     socket = io(ENDPOINT);
   }, []);
 
+  const createRoom = () => {
+    socket.emit(
+      "createRoom",
+      { room, playerAmount, computerPlayers },
+      response => {
+        if (response == "Room already exists") {
+          setError(response);
+        } else {
+          console.log("Success");
+          navigation.navigate("Room", { name, room });
+        }
+      }
+    );
+  };
+
   return (
-    <View style={{ padding: 10 }}>
-      <TextField
-        label="Your Name"
-        onChangeText={text => setName(text)}
-        value={name}
+    <ScrollView style={styles.page}>
+      <PageHeader
+        title="Create Room"
+        description="Setup a new room for you and your friends"
       />
-      <TextField
-        label="Room Name"
-        onChangeText={text => {
-          setRoom(text);
-          setError("");
-        }}
-        value={room}
-      />
+      <View style={styles.form}>
+        <TextField
+          label="Your Name"
+          onChangeText={text => setName(text)}
+          value={name}
+        />
+        <TextField
+          label="Room Name"
+          onChangeText={text => {
+            setRoom(text);
+            setError("");
+          }}
+          value={room}
+        />
 
-      <TextField
-        label="Starting player amount"
-        onChangeText={amount => setPlayerAmount(amount)}
-        prefix="$"
-        value={playerAmount && playerAmount}
-        keyboardType="phone-pad"
-      />
+        <TextField
+          label="Starting player cash"
+          onChangeText={amount => setPlayerAmount(amount)}
+          prefix="$"
+          value={playerAmount && playerAmount}
+          keyboardType="phone-pad"
+        />
 
-      {computerPlayers.map((computerPlayer, index) => (
-        <View>
-          <TextField
-            label={`AI (${index + 1}) Name`}
-            onChangeText={text => {
-              computerPlayers[index].name = text;
-              setAI(computerPlayers);
-            }}
-            value={computerPlayer.name}
-            style={{ height: 20 }}
-          />
-          <TextField
-            label={`AI (${index + 1}) Amount`}
-            onChangeText={amount => {
-              computerPlayers[index].amount = amount;
-              setAI(computerPlayers);
-            }}
-            prefix="$"
-            value={computerPlayer.amount && computerPlayer.amount}
-            keyboardType="phone-pad"
-            style={{ height: 20 }}
-          />
+        {computerPlayers.length > 0 && (
+          <Text style={styles.banksTitle}>Banks</Text>
+        )}
+
+        {computerPlayers.map((computerPlayer, index) => (
+          <View>
+            <TextField
+              label={`Bank (${index + 1}) Name`}
+              onChangeText={text => {
+                computerPlayers[index].name = text;
+                setAI(computerPlayers);
+              }}
+              value={computerPlayer.name}
+              style={{ height: 20 }}
+            />
+            <TextField
+              label={`Bank (${index + 1}) Amount`}
+              onChangeText={amount => {
+                computerPlayers[index].amount = amount;
+                setAI(computerPlayers);
+              }}
+              prefix="$"
+              value={computerPlayer.amount && computerPlayer.amount}
+              keyboardType="phone-pad"
+              style={{ height: 20 }}
+            />
+          </View>
+        ))}
+
+        <View style={styles.instruction}>
+          <Text>
+            Add additional banks to hold cash for the game you are playing.
+          </Text>
+          <Text style={{ color: "grey" }}>e.g. Monopoly bank</Text>
         </View>
-      ))}
 
-      <Button
-        style={{ margin: 30 }}
-        raised
-        text="Add AI"
-        onPress={() => {
-          setAI([...computerPlayers, { name: "", amount: null }]);
-        }}
-      />
-
-      <Button
-        style={{ margin: 30 }}
-        raised
-        primary
-        text="Create Room"
-        onPress={() => {
-          socket.emit(
-            "createRoom",
-            { room, playerAmount, computerPlayers },
-            response => {
-              if (response == "Room already exists") {
-                setError(response);
-              } else {
-                console.log("Success");
-                navigation.navigate("Room", { name, room });
-              }
-            }
-          );
-        }}
-      />
-
-      <Text>{error}</Text>
-    </View>
+        <View style={styles.buttons}>
+          <PrimaryButton
+            text="Add Bank"
+            type="inverse"
+            onPress={() => {
+              setAI([...computerPlayers, { name: "", amount: null }]);
+            }}
+          />
+          <PrimaryButton text="Create Room" onPress={createRoom} />
+          {error != "" && <Text style={styles.error}>Error: {error}</Text>}
+        </View>
+      </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  page: {
+    padding: 20,
+    backgroundColor: "white",
+    flex: 1
+  },
+  form: {
+    justifyContent: "space-evenly"
+  },
+  error: {
+    color: "red"
+  },
+  instruction: {
+    marginTop: 20,
+    marginBottom: 20
+  },
+  banksTitle: {
+    marginTop: 20,
+    fontWeight: "bold"
+  },
+  buttons: {
+    marginBottom: 80
+  }
+});

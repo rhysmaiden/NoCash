@@ -16,7 +16,7 @@ const PrimaryButton = props => {
             marginBottom: 10,
             backgroundColor:
               props.type == "inverse" ? "white" : "rgb(52,186,241)",
-            borderColor: "white",
+            borderColor: props.type == "inverse" ? "rgb(52,186,241)" : "white",
             borderWidth: 1,
             borderRadius: 20
           },
