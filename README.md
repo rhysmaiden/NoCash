@@ -31,10 +31,17 @@ A mobile app that allows users to play board and card games that require currenc
 
 ## Server
 
+### `Deploy`
+* Push into productionServer branch
+* Heroku will automatically deploy
+
+
 ### `Stack`
 * Built in NodeJS.
 * Exported using Expo
 * Sockets using "socket.io"
+
+
 
 ### `Sockets`
 
