@@ -9,8 +9,8 @@ import BackButton from "../components/backButton.js";
 
 let socket;
 
-const ENDPOINT = "http://192.168.1.101:5000/";
-//const ENDPOINT = "https://nochash-backend.herokuapp.com/";
+// const ENDPOINT = "http://192.168.1.101:5000/";
+const ENDPOINT = "https://nochash-backend.herokuapp.com/";
 
 export default function JoinRoom({ navigation }) {
   const [name, setName] = useState("");
