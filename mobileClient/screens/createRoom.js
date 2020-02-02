@@ -11,8 +11,6 @@ let socket;
 const ENDPOINT = "http://192.168.1.101:5000/";
 //const ENDPOINT = "https://nochash-backend.herokuapp.com/";
 
-import { Button } from "react-native-material-ui";
-
 export default function CreateRoom({ navigation }) {
   const [name, setName] = useState("");
   const [room, setRoom] = useState("");
@@ -86,7 +84,7 @@ export default function CreateRoom({ navigation }) {
                 setAI(computerPlayers);
               }}
               value={computerPlayer.name}
-              style={{ height: 20 }}
+              style={styles.textField}
             />
             <TextField
               label={`Bank (${index + 1}) Amount`}
@@ -97,7 +95,7 @@ export default function CreateRoom({ navigation }) {
               prefix="$"
               value={computerPlayer.amount && computerPlayer.amount}
               keyboardType="phone-pad"
-              style={{ height: 20 }}
+              style={styles.textField}
             />
           </View>
         ))}
@@ -147,5 +145,8 @@ const styles = StyleSheet.create({
   },
   buttons: {
     marginBottom: 80
+  },
+  textField: {
+    height: 20
   }
 });

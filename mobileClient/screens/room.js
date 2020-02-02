@@ -24,6 +24,31 @@ export default function Room({ navigation }) {
   const ENDPOINT = "http://192.168.1.101:5000/";
   // const ENDPOINT = "https://nochash-backend.herokuapp.com/";
 
+  /* ****************************
+            NAVGIGATION
+  *****************************/
+
+  const navigateToSend = () => {
+    navigation.navigate("SendMoney", {
+      myIndex,
+      users,
+      room,
+      socket
+    });
+  };
+
+  const navigateToRequest = () => {
+    navigation.navigate("RequestMoney", {
+      myIndex,
+      users,
+      room,
+      socket
+    });
+  };
+
+  /* ****************************
+          SETTING STATE
+  *****************************/
   useEffect(() => {
     const nameString = navigation.getParam("name");
     const roomString = navigation.getParam("room");
@@ -45,6 +70,20 @@ export default function Room({ navigation }) {
   }, [ENDPOINT]);
 
   useEffect(() => {
+    if (name != "" && users.length != 0) {
+      users.map((u, index) => {
+        if (name === u.name) {
+          setCash(u.cash);
+          setMyIndex(index);
+        }
+      });
+    }
+  }, [users, name]);
+
+  /* ****************************
+            SOCKET
+  *****************************/
+  useEffect(() => {
     socket.on("users", newUsers => {
       setUsers(newUsers);
     });
@@ -64,18 +103,9 @@ export default function Room({ navigation }) {
     });
   }, []);
 
-  //Makes sure that the users name and the users in room have been received from server
-  useEffect(() => {
-    if (name != "" && users.length != 0) {
-      users.map((u, index) => {
-        if (name === u.name) {
-          setCash(u.cash);
-          setMyIndex(index);
-        }
-      });
-    }
-  }, [users, name]);
-
+  /* ****************************
+            POPUP
+  *****************************/
   const acceptRequest = () => {
     socket.emit(
       "sendMoney",
@@ -105,10 +135,20 @@ export default function Room({ navigation }) {
     });
   };
 
+  const handlePopup = index => {
+    if (index == 1) {
+      acceptRequest();
+    } else {
+      declineRequest();
+    }
+
+    setPopup(false);
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: "white" }}>
+    <View style={styles.page}>
       <ScrollView>
-        <View style={{ paddingLeft: 20, backgroundColor: "rgb(52, 186, 241)" }}>
+        <View style={styles.backButtonContainer}>
           <BackButton
             clicked={() => {
               navigation.goBack();
@@ -124,27 +164,13 @@ export default function Room({ navigation }) {
             text="Request"
             type="inverse"
             width="130"
-            onPress={() => {
-              navigation.navigate("RequestMoney", {
-                myIndex,
-                users,
-                room,
-                socket
-              });
-            }}
+            onPress={navigateToRequest}
           />
           <PrimaryButton
             type="inverse"
             text="Send"
             width="130"
-            onPress={() => {
-              navigation.navigate("SendMoney", {
-                myIndex,
-                users,
-                room,
-                socket
-              });
-            }}
+            onPress={navigateToSend}
           />
         </View>
 
@@ -158,13 +184,7 @@ export default function Room({ navigation }) {
               request.amount} from you.`}
             options={["Decline", "Accept"]}
             onSelectOption={index => {
-              if (index == 1) {
-                acceptRequest();
-              } else {
-                declineRequest();
-              }
-
-              setPopup(false);
+              handlePopup(index);
             }}
             popup={popup}
           />
@@ -197,5 +217,13 @@ const styles = StyleSheet.create({
     bottom: 15,
     position: "absolute",
     width: "100%"
+  },
+  backButtonContainer: {
+    paddingLeft: 20,
+    backgroundColor: "rgb(52, 186, 241)"
+  },
+  page: {
+    flex: 1,
+    backgroundColor: "white"
   }
 });

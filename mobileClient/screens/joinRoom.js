@@ -3,11 +3,7 @@ import { StyleSheet, Text, View, TextInput } from "react-native";
 import { Button } from "react-native-material-ui";
 import io from "socket.io-client";
 import PrimaryButton from "../components/primaryButton";
-import {
-  TextField,
-  FilledTextField,
-  OutlinedTextField
-} from "react-native-material-textfield";
+import { TextField } from "react-native-material-textfield";
 import PageHeader from "../components/pageHeader.js";
 import BackButton from "../components/backButton.js";
 

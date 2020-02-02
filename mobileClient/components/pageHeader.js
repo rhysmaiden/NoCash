@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Button, View, Text } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 
 const pageHeader = ({ title, description }) => {
   return (

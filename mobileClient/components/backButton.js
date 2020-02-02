@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { View } from "react-native";
 import { Button } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome";
 
@@ -30,9 +30,5 @@ const backButton = ({ clicked, buttonColor, backdropColor }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {}
-});
 
 export default backButton;
